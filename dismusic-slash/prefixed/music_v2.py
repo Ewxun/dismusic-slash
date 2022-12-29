@@ -23,10 +23,10 @@ class Music_v2(commands.Cog):
         self.bot: commands.Bot = bot
         self.bot.loop.create_task(self.start_nodes())
 
-    async def play_track(self, ctx: commands.Context, query: str, provider=None):
-        player: DisPlayer = ctx.guild.voice_client
+    async def play_track(self, interaction: discord.Interaction, query: str, provider=None):
+        player: DisPlayer = interaction.guild.voice_client
 
-        if ctx.user.voice.channel.id != player.channel.id:
+        if interaction.user.voice.channel.id != player.channel.id:
             raise MustBeSameChannel("**You must be in the same voice channel as the player.**")
 
         track_provider = {
@@ -36,7 +36,7 @@ class Music_v2(commands.Cog):
             "spotify": SpotifyTrack,
         }
 
-        msg = await ctx.channel.send(f"**Searching for** `{query}` :mag_right:")
+        msg = await interaction.channel.send(f"**Searching for** `{query}` :mag_right:")
 
         provider: Provider = (
             track_provider.get(provider) if provider else track_provider.get(player.track_provider)
@@ -56,11 +56,11 @@ class Music_v2(commands.Cog):
                 continue
 
         if not tracks:
-            return await ctx.response.send_message("**No song/track found with given query.**")
+            return await interaction.response.send_message("**No song/track found with given query.**")
 
         track = tracks[0]
 
-        await ctx.channel.send(f"**Added** `{track.title}` **to queue.** ")
+        await interaction.channel.send(f"**Added** `{track.title}` **to queue.** ")
         await player.queue.put(track)
 
         if not player.is_playing():
@@ -81,130 +81,129 @@ class Music_v2(commands.Cog):
 
     @musicgroup.command()
     @voice_connected()
-    async def connect(self, ctx: commands.Context):
+    async def connect(self, interaction: discord.Interaction):
         """Connect the player"""
-        if ctx.guild.voice_client:
+        if interaction.guild.voice_client:
             return
 
-        msg = await ctx.response.send_message(f"**Connecting to **`{ctx.author.voice.channel}`")
+        await interaction.response.send_message(f"**Connecting to **`{ctx.author.voice.channel}`")
 
         try:
-            player: DisPlayer = await ctx.user.voice.channel.connect(cls=DisPlayer)
+            player: DisPlayer = await interaction
+user.voice.channel.connect(cls=DisPlayer)
             self.bot.dispatch("dismusic_player_connect", player)
         except (asyncio.TimeoutError, ClientException):
-            await ctx.response.send_message("**Failed to connect to voice channel.**")
+            await interaction.response.send_message("**Failed to connect to voice channel.**")
 
         player.bound_channel = ctx.channel
         player.bot = self.bot
 
-        await msg.edit_original_message(content=f"**Connected to **`{player.channel.name}`")
+        await interaction.response.edit_message(content=f"**Connected to **`{player.channel.name}`")
         
         
     @musicgroup.command()
     @voice_channel_player()
-    async def volume(self, ctx: commands.Context, vol: int, forced:bool=False):
+    async def volume(self, interaction: discord.Interaction, vol: int, forced:bool=False):
         """Set volume"""
-        player: DisPlayer = ctx.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if vol < 0:
-            return await ctx.response.send_message("**Volume can't be less than 0**")
+            return await interaction.response.send_message("**Volume can't be less than 0**")
 
         if vol > 100 and not forced:
-            return await ctx.response.send_message("**Volume can't greater than 100**")
+            return await interaction.response.send_message("**Volume can't greater than 100**")
 
         await player.set_volume(vol)
-        await ctx.response.send_message(f"**Volume set to** {vol} :loud_sound:")
+        await interaction.response.send_message(f"**Volume set to** {vol} :loud_sound:")
         
     @musicgroup.command()
     @voice_connected()
-    async def play(self, ctx: commands.Context, *, query: str):
+    async def play(self, interaction: discord.Interaction, *, query: str):
         """Play or add song to queue (Defaults to YouTube)"""
-        if ctx.guild.voice_client:
+        if interaction.guild.voice_client:
             pass
-            #return
         else:
-          await ctx.response.send_message(f"**Connecting to **`{ctx.user.voice.channel}`")
+          await interaction.response.send_message(f"**Connecting to **`{ctx.user.voice.channel}`")
 
           try:
-            player: DisPlayer = await ctx.user.voice.channel.connect(cls=DisPlayer)
+            player: DisPlayer = await interaction.user.voice.channel.connect(cls=DisPlayer)
             self.bot.dispatch("dismusic_player_connect", player)
-          except (asyncio.TimeoutError, ClientException) as e:
-            #raise e
-            await ctx.response.edit_message("**Failed to connect to voice channel.**")
+          except (asyncio.TimeoutError, ClientException):
+            await interaction.response.edit_message("**Failed to connect to voice channel.**")
 
-          player.bound_channel = ctx.channel
+          player.bound_channel = interaction.channel
           player.bot = self.bot
 
-          await ctx.response.edit_message(content=f"**Connected to **`{player.channel.name}`")
-        await self.play_track(ctx, query)
+          await interaction.response.edit_message(content=f"**Connected to **`{player.channel.name}`")
+        await self.play_track(interaction, query)
         
     @musicgroup.command()
     @voice_connected()
-    async def alwaysjoined(self, ctx: commands.Context):
+    async def alwaysjoined(self, interaction: discord.Interaction):
         """Enable 24/7 to disable it just do /music stop"""
-        if ctx.guild.voice_client:
-            return await ctx.response.send_message("Already enabled to disable it do /stop")
+        if interaction.guild.voice_client:
+            return await interaction.response.send_message("Already enabled to disable it do /stop")
 
-        await ctx.response.send_message(f"**Enabling 24/7 in **`{ctx.author.voice.channel}`!")
+        await interaction.response.send_message(f"**Enabling 24/7 in **`{ctx.author.voice.channel}`!")
 
         try:
-            player: DisPlayer = await ctx.author.voice.channel.connect(cls=DisPlayer)
+            player: DisPlayer = await interaction.user.voice.channel.connect(cls=DisPlayer)
             self.bot.dispatch("dismusic_player_connect", player)
         except (asyncio.TimeoutError, ClientException):
-            await ctx.response.edit_message("**Failed to enable!**")
+            await interaction.response.edit_message("**Failed to enable!**")
 
-        player.bound_channel = ctx.channel
+        player.bound_channel = interaction.channel
         player.bot = self.bot
 
-        await ctx.response.edit_message(content=f"**Enabled 24/7 in **`{player.channel.name}`!")
+        await interaction.response.edit_message(content=f"**Enabled 24/7 in **`{player.channel.name}`!")
 
     @musicgroup.command()
     @voice_channel_player()
-    async def stop(self, ctx: commands.Context):
+    async def stop(self, interaction: discord.Interaction):
         """Stop the player"""
-        player: DisPlayer = ctx.guild.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         await player.destroy()
-        await ctx.response.send_message("**Stopped the player** :stop_button: ")
+        await interaction.response.send_message("**Stopped the player** :stop_button: ")
         self.bot.dispatch("dismusic_player_stop", player)
 
     @musicgroup.command()
     @voice_channel_player()
-    async def pause(self, ctx: commands.Context):
+    async def pause(self, interaction: discord.Interaction):
         """Pause the player"""
-        player: DisPlayer = ctx.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if player.is_playing():
             if player.is_paused():
-                return await ctx.response.send_message("**Player is already paused**.")
+                return await interaction.response.send_message("**Player is already paused**.")
 
             await player.set_pause(pause=True)
             self.bot.dispatch("dismusic_player_pause", player)
-            return await ctx.response.send_message("**Paused** :pause_button: ")
+            return await interaction.response.send_message("**Paused** :pause_button: ")
 
-        await ctx.response.send_message("**Player is not playing anything.**")
+        await interaction.response.send_message("**Player is not playing anything.**")
 
     @musicgroup.command()
     @voice_channel_player()
-    async def resume(self, ctx: commands.Context):
+    async def resume(self, interaction: discord.Interaction):
         """Resume the player"""
-        player: DisPlayer = ctx.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if player.is_playing():
             if not player.is_paused():
-                return await ctx.response.send_message("**Player is already playing.**")
+                return await interaction.response.send_message("**Player is already playing.**")
 
             await player.set_pause(pause=False)
             self.bot.dispatch("dismusic_player_resume", player)
-            return await ctx.response.send_message("**Resumed** :musical_note: ")
+            return await interaction.response.send_message("**Resumed** :musical_note: ")
 
-        await ctx.response.send_message("**Player is not playing anything.**")
+        await interaction.response.send_message("**Player is not playing anything.**")
 
     @musicgroup.command()
     @voice_channel_player()
-    async def skip(self, ctx: commands.Context):
+    async def skip(self, interaction: discord.Interaction):
         """Skip to next song in the queue."""
-        player: DisPlayer = ctx.guild.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if player.loop == "CURRENT":
             player.loop = "NONE"
@@ -212,46 +211,46 @@ class Music_v2(commands.Cog):
         await player.stop()
 
         self.bot.dispatch("dismusic_track_skip", player)
-        await ctx.response.send_message("**Skipped** :track_next:")
+        await interaction.response.send_message("**Skipped** :track_next:")
 
     @musicgroup.command()
     @voice_channel_player()
-    async def seek(self, ctx: commands.Context, seconds: int):
+    async def seek(self, interaction: discord.Interaction, seconds: int):
         """Seek the player backward or forward"""
-        player: DisPlayer = ctx.guild.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if player.is_playing():
             old_position = player.position
             position = old_position + seconds
             if position > player.source.length:
-                return await ctx.response.send_message("**Can't seek past the end of the track.**")
+                return await interaction.response.send_message("**Can't seek past the end of the track.**")
 
             if position < 0:
                 position = 0
 
             await player.seek(position * 1000)
             self.bot.dispatch("dismusic_player_seek", player, old_position, position)
-            return await ctx.response.send_message(f"**Seeked {seconds} seconds** :fast_forward: ")
+            return await interaction.response.send_message(f"**Seeked {seconds} seconds** :fast_forward: ")
 
-        await ctx.response.send_message("**Player is not playing anything.**")
+        await interaction.response.send_message("**Player is not playing anything.**")
 
     @musicgroup.command()
     @voice_channel_player()
     async def loop(self, ctx: commands.Context, loop_type: str = None):
         """Set loop to `NONE`, `CURRENT` or `PLAYLIST`"""
-        player: DisPlayer = ctx.guild.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         result = await player.set_loop(loop_type)
-        await ctx.response.send_message(f"Loop has been set to {result} :repeat: ")
+        await interaction.response.send_message(f"Loop has been set to {result} :repeat: ")
 
     @musicgroup.command()
     @voice_channel_player()
-    async def queue(self, ctx: commands.Context):
+    async def queue(self, interaction: discord.Interaction):
         """Player queue"""
-        player: DisPlayer = ctx.guild.voice_client
+        player: DisPlayer = interaction.guild.voice_client
 
         if len(player.queue._queue) < 1:
-            return await ctx.response.send_message("**Nothing is in the queue.**")
+            return await interaction.response.send_message("**Nothing is in the queue.**")
 
         embed = Embed(color=Color(0x2F3136))
         embed.set_author(
@@ -285,11 +284,11 @@ class Music_v2(commands.Cog):
 
         embed.set_footer(text=length)
 
-        await ctx.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
     @musicgroup.command()
     @voice_channel_player()
-    async def nowplaying(self, ctx: commands.Context):
+    async def nowplaying(self, interaction: discord.Interaction):
         """Currently playing song information"""
-        player: DisPlayer = ctx.guild.voice_client
-        await player.invoke_player(ctx, True)
+        player: DisPlayer = interaction.guild.voice_client
+        await player.invoke_player(interaction, True)
