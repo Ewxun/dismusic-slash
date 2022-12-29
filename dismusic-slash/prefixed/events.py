@@ -42,7 +42,7 @@ class MusicEvents_v2(commands.Cog):
         await self.handle_end_stuck_exception(player, track)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, interaction, error):
         errors = (
             InvalidLoopMode,
             MustBeSameChannel,
@@ -53,6 +53,6 @@ class MusicEvents_v2(commands.Cog):
         )
 
         if isinstance(error, errors):
-            await ctx.send(error)
+            await interaction.response.send_message(error)
         else:
             pass
