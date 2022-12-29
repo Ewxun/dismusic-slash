@@ -1,5 +1,4 @@
-[![Downloads](https://static.pepy.tech/personalized-badge/dismusic?period=total&units=abbreviation&left_color=blue&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/dismusic)
-# dismusic
+# dismusic-slash
 
 Music extension making use of discord.py v2.1. Supports YouTube, YoutubeMusic, SoundCloud and Spotify.
 
@@ -32,6 +31,10 @@ bot.spotify_credentials = {
     'client_id': 'CLIENT_ID_HERE',
     'client_secret': 'CLIENT_SECRET_HERE'
 }
+
+# If you want your slash commands to be grouped under `music` set to True (Default: True)
+bot.music_prefixed = True
+
 
 bot.load_extension('dismusic-slash')
 bot.run('TOKEN')
