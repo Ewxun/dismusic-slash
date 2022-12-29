@@ -3,6 +3,10 @@
 
 Music extension making use of discord.py v2.1. Supports YouTube, YoutubeMusic, SoundCloud and Spotify.
 
+# Notice
+
+This project is for my personal use and work as I intend it to. I will not add any features to it. I will be only fixing errors or updating it as discord.py updates.
+
 # Installation
 
 From Github
