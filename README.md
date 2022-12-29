@@ -1,18 +1,14 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/dismusic?period=total&units=abbreviation&left_color=blue&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/dismusic)
 # dismusic
 
-Music cog for discord bots. Supports YouTube, YoutubeMusic, SoundCloud and Spotify.
+Music extension making use of discord.py v2.1. Supports YouTube, YoutubeMusic, SoundCloud and Spotify.
 
 # Installation
 
-```sh
-python3 -m pip install dismusic
-```
-
-or from Github (Might be unstable)
+From Github
 
 ```sh
-python3 -m pip install git+https://github.com/shahriyardx/dismusic.git
+python3 -m pip install git+https://github.com/Ewxun/dismusic-slash.git
 ```
 
 # Usage
@@ -33,7 +29,7 @@ bot.spotify_credentials = {
     'client_secret': 'CLIENT_SECRET_HERE'
 }
 
-bot.load_extension('dismusic')
+bot.load_extension('dismusic-slash')
 bot.run('TOKEN')
 ```
 
@@ -51,8 +47,6 @@ bot.run('TOKEN')
 **queue** - `See queue` \
 **volume** - `Set volume` \
 **loop** - `Loop song/playlist`
-
-> Filter commands coming soon.
 
 # Events
 
@@ -90,4 +84,4 @@ on_dismusic_player_seek(player, previous_position, current_position):
 # Lavalink Configs
 Find configs here [https://lavalink.darrennathanael.com/](https://lavalink.darrennathanael.com/)
 
-[Join Discord](https://discord.gg/7SaE8v2) For any kind of help
+DM `Ewxun#6311` For any kind of help
