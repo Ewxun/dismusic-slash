@@ -69,7 +69,7 @@ class DisPlayer(Player):
 
         return self.loop
 
-    async def invoke_player(self, ctx: commands.Context=None, now_playing_invoke=False) -> None:
+    async def invoke_player(self, inter: discord.Interaction=None, now_playing_invoke=False) -> None:
         track = self.source
 
         if not track:
@@ -118,10 +118,10 @@ class DisPlayer(Player):
         if next_song:
             embed.add_field(name="Next Song", value=next_song, inline=False)
 
-        if not ctx:
+        if not interaction:
             return await self.bound_channel.send(embed=embed, view=view)
 
         if now_playing_invoke:
-          await ctx.response.send_message(embed=embed, view=view)
+          await inter.response.send_message(embed=embed, view=view)
         else:
-          await ctx.channel.send(embed=embed, view=view)
+          await inter.channel.send(embed=embed, view=view)
